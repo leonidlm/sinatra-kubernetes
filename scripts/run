@@ -1,0 +1,21 @@
+#!/bin/bash
+
+expand_var() {
+	eval echo $1
+}
+
+retry() {
+	local command=$1
+
+	until $command; do sleep 5; done
+}
+
+main() {
+	DATABASE_URL=$(expand_var $DATABASE_URL)
+
+	cd /app
+	retry "bundle exec rake db:migrate"
+	bundle exec ruby ./app.rb
+}
+
+main "$@"

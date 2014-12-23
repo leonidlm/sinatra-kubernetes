@@ -1,0 +1,68 @@
+#!/bin/bash
+
+readonly REGION="us-central1"
+readonly ZONE="$REGION-a"
+readonly CLUSTER_NAME="sinatra-example"
+readonly DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
+
+create_cluster() {
+	# CREATE the Kubernetes cluster
+	gcloud preview container clusters --zone $ZONE create $CLUSTER_NAME \
+		--machine-type f1-micro \
+		--num-nodes 1
+
+	# Open port 80 in the firewall
+	gcloud compute firewall-rules create "allow-http" \
+		--allow tcp:80 \
+		--network "default" \
+		--source-ranges "0.0.0.0/0"
+
+	# Create the database layer
+	gcloud preview container pods --cluster-name=$CLUSTER_NAME create postgres \
+		--zone=$ZONE \
+		--config-file=$DIR/definitions/postgres-pod.json
+	gcloud preview container services --cluster-name=$CLUSTER_NAME create \
+		--zone=$ZONE \
+		--config-file=$DIR/definitions/postgres-service.json
+
+	# Create the web-app layer
+	gcloud preview container pods --cluster-name=$CLUSTER_NAME create sinatra \
+		--zone=$ZONE \
+		--config-file=$DIR/definitions/sinatra-pod.json
+	gcloud preview container services --cluster-name=$CLUSTER_NAME create \
+		--zone=$ZONE \
+		--config-file=$DIR/definitions/sinatra-service.json
+
+	# Show connection information for the sinatra service
+	gcloud compute forwarding-rules describe sinatra --region $REGION
+}
+
+destroy_cluster() {
+	gcloud preview container pods --cluster-name=$CLUSTER_NAME delete postgres \
+		--zone=$ZONE
+	gcloud preview container pods --cluster-name=$CLUSTER_NAME delete sinatra \
+		--zone=$ZONE
+	gcloud preview container services --cluster-name=$CLUSTER_NAME delete postgres \
+		--zone=$ZONE
+	gcloud preview container services --cluster-name=$CLUSTER_NAME delete sinatra \
+		--zone=$ZONE
+}
+
+main() {
+	local action=$1
+
+	case $action in
+		create)
+			create_cluster
+			;;
+		destroy)
+			destroy_cluster
+			;;
+		*)
+			echo "Please provide an ACTION (create/destroy)."
+			exit 1
+			;;
+	esac
+}
+
+main "$@"

@@ -1,0 +1,25 @@
+{
+  "id": "postgres",
+  "kind": "Pod",
+  "apiVersion": "v1beta1",
+  "desiredState": {
+    "manifest": {
+      "version": "v1beta1",
+      "id": "postgres",
+      "containers": [{
+        "name": "postgres",
+        "image": "orchardup/postgresql",
+        "cpu": 100,
+        "ports": [{ "name": "postgres", "containerPort": 5432 }],
+        "env": [
+          {"name": "POSTGRESQL_DB", "value": "development"},
+          {"name": "POSTGRESQL_USER", "value": "postgres"},
+          {"name": "POSTGRESQL_PASS", "value": "postgres"}
+        ]
+      }]
+    }
+  },
+  "labels": {
+    "name": "postgres", "role": "db"
+  }
+}

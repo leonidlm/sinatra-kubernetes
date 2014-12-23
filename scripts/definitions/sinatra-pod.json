@@ -1,0 +1,25 @@
+{
+  "id": "sinatra",
+  "kind": "Pod",
+  "apiVersion": "v1beta1",
+  "desiredState": {
+    "manifest": {
+      "version": "v1beta1",
+      "id": "sinatra",
+      "containers": [{
+        "name": "sinatra",
+        "image": "leonidlm/sinatra-demo",
+        "cpu": 100,
+        "ports": [{ "name": "sinatra", "containerPort": 4567 }],
+        "env": [
+         {"name": "DATABASE_URL","value": "postgres://$PG_USER:$PG_PASS@$POSTGRES_SERVICE_HOST:$POSTGRES_SERVICE_PORT/development"},
+         {"name": "PG_USER", "value": "postgres"},
+         {"name": "PG_PASS", "value": "postgres"}
+       ]
+      }]
+    }
+  },
+  "labels": {
+    "name": "sinatra", "role": "web"
+  }
+}
